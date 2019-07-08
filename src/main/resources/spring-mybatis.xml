@@ -1,0 +1,70 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-4.3.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+        
+    <!--读取db.properties-->
+    <context:property-placeholder location="classpath:jdbc.properties"/>
+    
+	<!--配置数据库连接池 -->
+  <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" destroy-method="close">  
+         <!-- 数据库基本信息配置 -->
+         <property name="url" value="${jdbc.url}" />  
+         <property name="username" value="${jdbc.username}" />  
+         <property name="password" value="${jdbc.password}" />  
+         <property name="driverClassName" value="${jdbc.driver}" />  
+    </bean>
+
+    <!-- 事务管理器，依赖于数据源-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    
+    <!--通知-->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <!--默认使用mysql的隔离级别，事务传播行为，是否可读等-->
+            <tx:method name="save*" propagation="REQUIRED"/>
+            <tx:method name="insert*" propagation="REQUIRED"/>
+            <tx:method name="add*" propagation="REQUIRED"/>
+            <tx:method name="create*" propagation="REQUIRED"/>
+            <tx:method name="delete*" propagation="REQUIRED"/>
+            <tx:method name="update*" propagation="REQUIRED"/>
+            <tx:method name="find*" propagation="SUPPORTS" read-only="true"/>
+            <tx:method name="select*" propagation="SUPPORTS" read-only="true"/>
+            <tx:method name="get*" propagation="SUPPORTS" read-only="true"/>
+        </tx:attributes>
+    </tx:advice>
+    
+    <!--切面-->
+    <aop:config>
+        <aop:advisor advice-ref="txAdvice" pointcut="execution(* cn.communication.service.*.*(..))"/>
+    </aop:config>
+    
+  <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+	<property name="dataSource" ref="dataSource"></property>
+	<property name="configLocation" value="classpath:SqlMapConfig.xml"></property>
+  </bean>
+
+   <!-- 接口开发,扫描 cn.communication.mapper包 ，写在此包下的接口UserMapper即可被扫描到 ,扫描到了接口，它就会找到
+   		与接口同名，并且在同一目录下的UserMapper.xml配置文件-->
+   <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+       <property name="basePackage" value="cn.communication.mapper"/>
+   </bean>
+   
+   <!-- 配置扫描@Service注解 -->
+   <context:component-scan base-package="cn.communication.service"/>
+
+</beans>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.communication.mapper.UserMapper">
+
+	<select id="getMapById" resultType="map">
+		SELECT tbl_id,tbl_username,tbl_password,tbl_info FROM user u
+		<where>
+			<if test="id != null and id != ''">
+				tbl_id = #{id}
+			</if>
+		</where>
+	</select>
+
+</mapper>
